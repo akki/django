@@ -124,9 +124,18 @@ Running the Selenium tests
 Some tests require Selenium and a Web browser (Firefox, Google Chrome, or
 Internet Explorer). To allow those tests to be run rather than skipped, you must
 install the selenium_ package into your Python path and run the tests with the
-``--selenium`` option::
+``--selenium=<BROWSER>`` option. For example, using Firefox (``--selenium=firefox``)::
 
-   $ ./runtests.py --settings=test_sqlite --selenium admin_inlines
+   $ ./runtests.py --selenium=firefox admin_views
+
+Depending on which browsers are installed on your system, you may use the
+following values for the ``--selenium`` option:
+
+* ``firefox``: Firefox
+* ``opera``: Opera
+* ``ie``: Internet Explorer
+* ``chrome``: Google Chrome
+* ``phantomjs``: PhantomJS
 
 Specifying ``--selenium`` automatically sets ``--tags=selenium`` to run only
 the tests that require selenium.
