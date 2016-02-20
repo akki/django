@@ -7,6 +7,7 @@ from collections import OrderedDict
 from functools import partial, reduce, update_wrapper
 
 from django import forms
+from django.db.models.deletion import ProtectedError
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import helpers, widgets
@@ -1095,6 +1096,7 @@ class ModelAdmin(BaseModelAdmin):
                 attr = obj._meta.pk.attname
             value = obj.serializable_value(attr)
             popup_response_data = json.dumps({
+                'action': 'add',
                 'value': six.text_type(value),
                 'obj': six.text_type(obj),
             })
@@ -1310,7 +1312,8 @@ class ModelAdmin(BaseModelAdmin):
 
     def response_delete(self, request, obj_display, obj_id):
         """
-        Determines the HttpResponse for the delete_view stage.
+        Determines the HttpResponse for the delete_view stage
+        when object is deleted successfully.
         """
 
         opts = self.model._meta
@@ -1329,6 +1332,44 @@ class ModelAdmin(BaseModelAdmin):
                 'name': force_text(opts.verbose_name),
                 'obj': force_text(obj_display),
             }, messages.SUCCESS)
+
+        if self.has_change_permission(request, None):
+            post_url = reverse('admin:%s_%s_changelist' %
+                               (opts.app_label, opts.model_name),
+                               current_app=self.admin_site.name)
+            preserved_filters = self.get_preserved_filters(request)
+            post_url = add_preserved_filters(
+                {'preserved_filters': preserved_filters, 'opts': opts}, post_url
+            )
+        else:
+            post_url = reverse('admin:index',
+                               current_app=self.admin_site.name)
+        return HttpResponseRedirect(post_url)
+
+    def response_protected_not_delete(self, request, obj_display, obj_id, msg):
+        """
+        Determines the HttpResponse for the delete_view stage
+        when protected object is not deleted.
+
+        Refs #26235.
+        """
+
+        opts = self.model._meta
+
+        if IS_POPUP_VAR in request.POST:
+            popup_response_data = json.dumps({
+                'action': 'protected_not_delete',
+            })
+            return SimpleTemplateResponse('admin/popup_response.html', {
+                'popup_response_data': popup_response_data,
+            })
+
+        self.message_user(request,
+            _('The %(name)s "%(obj)s" was not deleted: %(msg)s.') % {
+                'name': force_text(opts.verbose_name),
+                'obj': force_text(obj_display),
+                'msg': msg,
+            }, messages.ERROR)
 
         if self.has_change_permission(request, None):
             post_url = reverse('admin:%s_%s_changelist' %
@@ -1691,9 +1732,12 @@ class ModelAdmin(BaseModelAdmin):
             attr = str(to_field) if to_field else opts.pk.attname
             obj_id = obj.serializable_value(attr)
             self.log_deletion(request, obj, obj_display)
-            self.delete_model(request, obj)
+            try:
+                self.delete_model(request, obj)
+                return self.response_delete(request, obj_display, obj_id)
+            except ProtectedError as perr:
+                return self.response_protected_not_delete(request, obj_display, obj_id, perr[0])
 
-            return self.response_delete(request, obj_display, obj_id)
 
         object_name = force_text(opts.verbose_name)
 

@@ -2,6 +2,7 @@
 Built-in, globally-available admin actions.
 """
 
+from django.db.models.deletion import ProtectedError
 from django.contrib import messages
 from django.contrib.admin import helpers
 from django.contrib.admin.utils import get_deleted_objects, model_ngettext
@@ -46,10 +47,15 @@ def delete_selected(modeladmin, request, queryset):
             for obj in queryset:
                 obj_display = force_text(obj)
                 modeladmin.log_deletion(request, obj, obj_display)
-            queryset.delete()
-            modeladmin.message_user(request, _("Successfully deleted %(count)d %(items)s.") % {
+            try:
+                queryset.delete()
+                modeladmin.message_user(request, _("Successfully deleted %(count)d %(items)s.") % {
                 "count": n, "items": model_ngettext(modeladmin.opts, n)
-            }, messages.SUCCESS)
+                }, messages.SUCCESS)
+            except ProtectedError as perr:
+                modeladmin.message_user(request, _("Could not delete %(items)s: %(msg)s.") % {
+                    "items": model_ngettext(modeladmin.opts, n), "msg": perr.args[0]
+                }, messages.ERROR)
         # Return None to display the change list page again.
         return None
 

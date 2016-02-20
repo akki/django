@@ -2062,9 +2062,30 @@ class AdminViewDeletedObjectsTest(TestCase):
             '<li>Answer: <a href="%s">Yes.</a></li>' % reverse('admin:admin_views_answer_change', args=(a2.pk,))
         )
 
+    def test_protected_delete_post(self):
+        q = Question.objects.create(question="Why?")
+        a1 = Answer.objects.create(question=q, answer="Because.")
+
+        response = self.client.post(reverse('admin:admin_views_question_delete', args=(q.pk,)), {
+            'post': 'yes',
+        })
+        self.assertEqual(Question.objects.count(), 1)
+
+    def test_protected_bulk_delete(self):
+        q = Question.objects.create(question="Why?")
+        Answer.objects.create(question=q, answer="Because.")
+
+        response = self.client.post(reverse('admin:admin_views_question_changelist'), {
+             ACTION_CHECKBOX_NAME: [q.pk],
+            'action': 'delete_selected',
+            'post': 'yes',
+        })
+        self.assertEqual(Question.objects.count(), 1)
+
+
     def test_not_registered(self):
         should_contain = """<li>Secret hideout: underground bunker"""
-        response = self.client.get(reverse('admin:admin_views_villain_delete', args=(self.v1.pk,)))
+        self.client.get(reverse('admin:admin_views_villain_delete', args=(self.v1.pk,)))
         self.assertContains(response, should_contain, 1)
 
     def test_multiple_fkeys_to_same_model(self):
@@ -3074,7 +3095,7 @@ class AdminActionsTest(TestCase):
         self.assertContains(confirmation, "<li>Subscribers: 2</li>")
         self.assertContains(confirmation, "<li>External subscribers: 1</li>")
         self.assertContains(confirmation, ACTION_CHECKBOX_NAME, count=2)
-        self.client.post(reverse('admin:admin_views_subscriber_changelist'), delete_confirmation_data)
+        response = self.client.post(reverse('admin:admin_views_subscriber_changelist'), delete_confirmation_data)
         self.assertEqual(Subscriber.objects.count(), 0)
 
     @override_settings(USE_THOUSAND_SEPARATOR=True, USE_L10N=True)
