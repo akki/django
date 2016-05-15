@@ -1856,7 +1856,7 @@ class InlineModelAdmin(BaseModelAdmin):
         js = ['vendor/jquery/jquery%s.js' % extra, 'jquery.init.js',
               'inlines%s.js' % extra]
         if self.filter_vertical or self.filter_horizontal:
-            js.extend(['SelectBox.js', 'SelectFilter2.js'])
+            js.extend(['SelectBox.js', 'SelectFilter.js'])
         if self.classes and 'collapse' in self.classes:
             js.append('collapse%s.js' % extra)
         return forms.Media(js=['admin/js/%s' % url for url in js])

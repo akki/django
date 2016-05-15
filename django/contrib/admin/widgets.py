@@ -29,7 +29,7 @@ class FilteredSelectMultiple(forms.SelectMultiple):
     """
     @property
     def media(self):
-        js = ["core.js", "SelectBox.js", "SelectFilter2.js"]
+        js = ["SelectBox.js", "SelectFilter2.js"]
         return forms.Media(js=["admin/js/%s" % path for path in js])
 
     def __init__(self, verbose_name, is_stacked, attrs=None, choices=()):
@@ -40,13 +40,33 @@ class FilteredSelectMultiple(forms.SelectMultiple):
     def render(self, name, value, attrs=None):
         if attrs is None:
             attrs = {}
-        attrs['class'] = 'selectfilter'
+        attrs['class'] = ''
         if self.is_stacked:
             attrs['class'] += 'stacked'
-
+        id_ = attrs.get('id', 'id_%s' % name)
         attrs['data-field-name'] = self.verbose_name
         attrs['data-is-stacked'] = int(self.is_stacked)
         output = super(FilteredSelectMultiple, self).render(name, value, attrs)
+        output.append(u'''
+            <script type="text/javascript">
+            (function($) {
+                $(function() {
+                    $("#%(id)s").selectFilter({
+                        'name': "%(name)s",
+                        'verbose_name': "%(verbose_name)s",
+                        'is_stacked': %(is_stacked)s,
+                        'admin_media_prefix': "%(admin_media_prefix)s"
+                    });
+                });
+            })(django.jQuery);
+            </script>
+        ''' % {
+            'id': id_,
+            'name': name,
+            'verbose_name': self.verbose_name.replace('"', '\\"'),
+            'is_stacked': int(self.is_stacked),
+            'admin_media_prefix': settings.ADMIN_MEDIA_PREFIX
+        })
         return mark_safe(output)
 
 
