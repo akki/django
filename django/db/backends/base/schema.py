@@ -348,6 +348,18 @@ class BaseDatabaseSchemaEditor(object):
             fields = [model._meta.get_field(field) for field in field_names]
             self.execute(self._create_index_sql(model, fields, suffix="_idx"))
 
+    def add_index(self, index):
+        """
+        Add an index on a model.
+        """
+        self.execute(index.create_sql(self, suffix='_idx'))
+
+    def remove_index(self, index):
+        """
+        Remove an index from a model.
+        """
+        self.execute(index.remove_sql(self))
+
     def _delete_composed_index(self, model, fields, constraint_kwargs, sql):
         columns = [model._meta.get_field(field).column for field in fields]
         constraint_names = self._constraint_names(model, columns, **constraint_kwargs)

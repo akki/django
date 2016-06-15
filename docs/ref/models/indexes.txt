@@ -1,0 +1,85 @@
+=====================
+Model index reference
+=====================
+
+.. module:: django.db.models.indexes
+   :synopsis: Built-in index types.
+
+.. currentmodule:: django.db.models
+
+.. versionadded:: 1.11
+
+Index classes define a specific database index which can be created through
+them. This document explains the API references of :class:`BaseIndex` which is
+the base class for all other index classes. This includes the `index options`_
+and `built-in indexes`_ Django offers. The indexes can be created in the
+database via the :class:`~django.db.migrations.operations.AddIndex` class
+as follows::
+
+    from django.db import migrations, models
+
+    class Migration(migrations.Migration):
+
+        operations = [
+            migrations.AddIndex(
+                model_name='Book',
+                models.Index('title', 'author', name='my_index_name')  # An index on the title and author fields
+            ),
+        ]
+
+.. note::
+
+    Technically, indexes are defined in `django.db.models.indexes`, but for
+    convenience they're imported into :mod:`django.db.models`; the standard
+    convention is to use ``from django.db import models`` and refer to the indexes
+    as ``models.<IndexClass>``.
+
+Index options
+=============
+
+``*fields``
+-----------
+
+.. attribute:: BaseIndex.fields
+
+Index classes take the field names of which they are being used as arguments
+directly during initialization.
+
+``model``
+---------
+
+.. attribute:: BaseIndex.model
+
+The model representing the table on which the index has to be set. This is an
+optional argument.
+
+``name``
+--------
+
+.. attribute:: BaseIndex.name
+
+The name of the index, if any you want to keep in the database. If `name` is
+not provided Django will create a name internally on it's own.
+
+Built-in indexes
+================
+
+The various built-in index classes that Django provides are as follows:
+
+``Index``
+---------
+
+.. class:: Index(*fields, **options)
+
+    Creates the default index (B-Tree) in the database.
+
+BaseIndex class
+===============
+
+The index classes (like ``Index``) are subclasses of the ``BaseIndex``
+class. The structure of the BaseIndex class is as follows:
+
+.. class:: BaseIndex(*fields, **options)
+
+``fields`` will contain the names of the fields on which the index is desired.
+``options`` allows ``model`` and ``name`` parameters.
