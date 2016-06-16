@@ -6,7 +6,7 @@ from django.utils.encoding import force_bytes
 
 __all__ = ['Index']
 
-# Max length restriction on names imposed by Oracle
+# The max length of the names of the indexes (restricted to 30 due to Oracle)
 MAX_NAME_LENGTH = 30
 
 
@@ -84,12 +84,11 @@ class Index(object):
 
     def get_name(self, suffix=None):
         """
-        Generate a unique name for the index.
+        Generate a unique name of length MAX_NAME_LENGTH for the index.
         """
         if suffix is None:
             suffix = '_%s' % self.index_type
         column_names = self.fields
-        # If there is just one column in the index, use a default algorithm from Django
         table_name = self.model._meta.db_table
         index_unique_hash = self._hash_generator(column_names)
         index_name = ('%s_%s_%s%s' % (
