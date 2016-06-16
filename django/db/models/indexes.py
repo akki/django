@@ -10,10 +10,9 @@ __all__ = ['Index']
 MAX_NAME_LENGTH = 30
 
 
-class BaseIndex(object):
+class Index(object):
 
-    # The type of index - BTree, Hash, RTree, etc.
-    index_type = None
+    index_type = 'idx'
 
     def __init__(self, *fields, **kwargs):
         if not fields:
@@ -30,10 +29,47 @@ class BaseIndex(object):
         return self._name
 
     def create_sql(self, schema_editor, suffix=''):
-        raise NotImplementedError('subclasses of BaseIndex require a create_sql() method')
+        columns = [field for field in self.fields]
+        fields = [self.model._meta.get_field(field) for field in self.fields]
+        if len(fields) == 1 and fields[0].db_tablespace:
+            tablespace_sql = schema_editor.connection.ops.tablespace_sql(fields[0].db_tablespace)
+        elif self.model._meta.db_tablespace:
+            tablespace_sql = schema_editor.connection.ops.tablespace_sql(self.model._meta.db_tablespace)
+        else:
+            tablespace_sql = ""
+        if tablespace_sql:
+            tablespace_sql = " " + tablespace_sql
+
+        quote_name = schema_editor.quote_name
+        return schema_editor.sql_create_index % {
+            "table": quote_name(self.model._meta.db_table),
+            "name": quote_name(self.name),
+            "columns": ", ".join(quote_name(column) for column in columns),
+            "extra": tablespace_sql,
+        }
 
     def remove_sql(self, schema_editor):
-        raise NotImplementedError('subclasses of BaseIndex require a remove_sql() method')
+        quote_name = schema_editor.quote_name
+        return schema_editor.sql_delete_index % {
+            "table": quote_name(self.model._meta.db_table),
+            "name": quote_name(self.name),
+        }
+
+    def deconstruct(self):
+        """
+        Returns a 3-tuple of class import path, positional arguments, and keyword
+        arguments.
+        """
+        return (self.__class__.__name__, self.fields, {})
+
+    def __repr__(self):
+        return '<%s: fields="%s">' % (self.__class__.__name__, ', '.join(self.fields))
+
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__) and (self.deconstruct() == other.deconstruct())
+
+    def __ne__(self, other):
+        return not (self == other)
 
     @staticmethod
     def _hash_generator(*args):
@@ -78,51 +114,3 @@ class BaseIndex(object):
         if index_name[0].isdigit():
             index_name = "D%s" % index_name[1:]
         return index_name
-
-    def deconstruct(self):
-        """
-        Returns a 3-tuple of class import path, positional arguments, and keyword
-        arguments.
-        """
-        return (self.__class__.__name__, self.fields, {})
-
-    def __repr__(self):
-        return '<%s: fields="%s">' % (self.__class__.__name__, ', '.join(self.fields))
-
-    def __eq__(self, other):
-        return (self.__class__ == other.__class__) and (self.deconstruct() == other.deconstruct())
-
-    def __ne__(self, other):
-        return not (self == other)
-
-
-class Index(BaseIndex):
-
-    index_type = 'idx'
-
-    def create_sql(self, schema_editor, suffix=''):
-        columns = [field for field in self.fields]
-        fields = [self.model._meta.get_field(field) for field in self.fields]
-        if len(fields) == 1 and fields[0].db_tablespace:
-            tablespace_sql = schema_editor.connection.ops.tablespace_sql(fields[0].db_tablespace)
-        elif self.model._meta.db_tablespace:
-            tablespace_sql = schema_editor.connection.ops.tablespace_sql(self.model._meta.db_tablespace)
-        else:
-            tablespace_sql = ""
-        if tablespace_sql:
-            tablespace_sql = " " + tablespace_sql
-
-        quote_name = schema_editor.quote_name
-        return schema_editor.sql_create_index % {
-            "table": quote_name(self.model._meta.db_table),
-            "name": quote_name(self.name),
-            "columns": ", ".join(quote_name(column) for column in columns),
-            "extra": tablespace_sql,
-        }
-
-    def remove_sql(self, schema_editor):
-        quote_name = schema_editor.quote_name
-        return schema_editor.sql_delete_index % {
-            "table": quote_name(self.model._meta.db_table),
-            "name": quote_name(self.name),
-        }
