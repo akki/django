@@ -558,6 +558,12 @@ class ModelState(object):
                 return field
         raise ValueError("No field called %s on model %s" % (name, self.name))
 
+    def get_index_by_name(self, name):
+        for index in self.options['indexes']:
+            if index.name == name:
+                return index
+        raise ValueError("No index named %s on model %s" % (name, self.name))
+
     def __repr__(self):
         return "<ModelState: '%s.%s'>" % (self.app_label, self.name)
 

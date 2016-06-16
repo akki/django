@@ -1413,8 +1413,7 @@ class OperationTests(OperationTestBase):
         project_state = self.set_up_test_model("test_rmin", multicol_index=True)
         self.assertTableExists("test_rmin_pony")
         self.assertIndexExists("test_rmin_pony", ["pink", "weight"])
-        index = models.Index("pink", "weight", name="pony_test_idx")
-        operation = migrations.RemoveIndex("Pony", index)
+        operation = migrations.RemoveIndex("Pony", "pony_test_idx")
         self.assertEqual(operation.describe(), "Remove index pony_test_idx from Pony")
         new_state = project_state.clone()
         operation.state_forwards("test_rmin", new_state)
@@ -1433,7 +1432,7 @@ class OperationTests(OperationTestBase):
         definition = operation.deconstruct()
         self.assertEqual(definition[0], "RemoveIndex")
         self.assertEqual(definition[1], [])
-        self.assertEqual(definition[2], {'model_name': "Pony", 'index': index})
+        self.assertEqual(definition[2], {'model_name': "Pony", 'name': 'pony_test_idx'})
 
     def test_alter_index_together(self):
         """
