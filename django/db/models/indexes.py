@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import hashlib
 
+from django.core.exceptions import ValidationError
 from django.utils.encoding import force_bytes
 
 __all__ = ['Index']
@@ -18,7 +19,11 @@ class Index(object):
         if not fields:
             raise ValueError("Minimum one field is required to define an index.")
         self.fields = fields
-        self._name = kwargs.get('name')
+        self._name = kwargs.get('name', '')
+        if len(self._name) > MAX_NAME_LENGTH:
+            raise ValidationError(
+                "Index names cannot be longer than %s chars." % MAX_NAME_LENGTH
+            )
         if 'model' in kwargs:
             self.model = kwargs['model']
 

@@ -57,8 +57,9 @@ optional argument.
 
 .. attribute:: Index.name
 
-The name of the index, if any you want to keep in the database. If `name` is
-not provided Django will create a name internally on it's own.
+The name of the index, if any, you want to keep in the database. If `name` is
+not provided Django will create a name internally on it's own. Index names
+cannot be longer than 30 characters.
 
 Built-in indexes
 ================
