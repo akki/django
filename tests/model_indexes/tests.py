@@ -20,3 +20,10 @@ class IndexesTests(TestCase):
     def test_name(self):
         index = models.Index('title', 'author', model=Book)
         self.assertEqual(index.name, 'model_index_title_7be80f0d_idx')
+
+    def test_deconstruction(self):
+        index = models.Index('title')
+        path, args, kwargs = index.deconstruct()
+        self.assertEqual(path, "django.db.models.Index")
+        self.assertEqual(args, ('title',))
+        self.assertEqual(kwargs, {})

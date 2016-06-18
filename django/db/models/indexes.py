@@ -65,7 +65,9 @@ class Index(object):
         Returns a 3-tuple of class import path, positional arguments, and keyword
         arguments.
         """
-        return (self.__class__.__name__, self.fields, {})
+        path = "%s.%s" % (self.__class__.__module__, self.__class__.__name__)
+        path = path.replace("django.db.models.indexes", "django.db.models")
+        return (path, self.fields, {})
 
     def __repr__(self):
         return '<%s: fields="%s">' % (self.__class__.__name__, ', '.join(self.fields))
