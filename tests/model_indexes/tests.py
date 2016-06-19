@@ -18,8 +18,8 @@ class IndexesTests(TestCase):
             models.Index('title', name='looooooooooooong_index_name_idx')
 
     def test_name(self):
-        index = models.Index('title', 'author', model=Book)
-        self.assertEqual(index.name, 'model_index_title_7be80f0d_idx')
+        index = models.Index('author', 'title', model=Book)
+        self.assertEqual(index.name, 'model_index_author_de9d81_idx')
 
     def test_deconstruction(self):
         index = models.Index('title')

@@ -87,32 +87,28 @@ class Index(object):
         h = hashlib.md5()
         for arg in args:
             h.update(force_bytes(arg))
-        return h.hexdigest()[:8]
+        return h.hexdigest()[:6]
 
-    def get_name(self, suffix=None):
+    def get_name(self, suffix='_idx'):
         """
-        Generate a unique name of length MAX_NAME_LENGTH for the index.
+        Generate a unique name for the index.
+
+        The name is divided into 3 parts - table name (12 chars), field name
+        (8 chars) and unique hash + suffix (10 chars). Each part is made to
+        fit its size by truncating the excess length.
         """
-        if suffix is None:
-            suffix = '_%s' % self.index_type
-        column_names = self.fields
         table_name = self.model._meta.db_table
-        index_unique_hash = self._hash_generator(column_names)
-        index_name = ('%s_%s_%s%s' % (
-            table_name, column_names[0], index_unique_hash, suffix
-        )).replace('"', '').replace('.', '_')
-        # If the name is too long chop off characters from the prefix_part of the name
-        if len(index_name) > MAX_NAME_LENGTH:
-            # If table name is too long keep it in the prefix_part
-            prefix_part = table_name
-            suffix_part = ('_%s_%s%s' % (column_names[0], index_unique_hash, suffix))
-            if len(suffix_part) > MAX_NAME_LENGTH:  # When column_names[0] is too long
-                # If column name is too long keep it in the prefix_part
-                prefix_part = ('%s_%s' % (table_name, column_names[0]))
-                suffix_part = ('_%s%s' % (index_unique_hash, suffix))
-            index_name = '%s%s' % (
-                prefix_part[:(MAX_NAME_LENGTH - len(suffix_part))], suffix_part
-            )
+        column_names = self.fields
+        hash_data = (table_name,) + column_names + (self.index_type,)
+        index_unique_hash = self._hash_generator(*hash_data)
+        table_part = table_name.replace('"', '').replace('.', '_')
+        field_part = column_names[0].replace('"', '').replace('.', '_')
+        hash_part = '%s%s' % (index_unique_hash, suffix)
+        if len(table_part) > 11:
+            table_part = table_part[:11]
+        if len(field_part) > 7:
+            field_part = field_part[:7]
+        index_name = '%s_%s_%s' % (table_part, field_part, hash_part)
         # It shouldn't start with an underscore (Oracle hates this)
         if index_name[0] == "_":
             index_name = index_name[1:]
