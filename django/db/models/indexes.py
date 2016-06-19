@@ -69,15 +69,6 @@ class Index(object):
         path = path.replace("django.db.models.indexes", "django.db.models")
         return (path, self.fields, {})
 
-    def __repr__(self):
-        return '<%s: fields="%s">' % (self.__class__.__name__, ', '.join(self.fields))
-
-    def __eq__(self, other):
-        return (self.__class__ == other.__class__) and (self.deconstruct() == other.deconstruct())
-
-    def __ne__(self, other):
-        return not (self == other)
-
     @staticmethod
     def _hash_generator(*args):
         """
@@ -116,3 +107,12 @@ class Index(object):
         if index_name[0].isdigit():
             index_name = "D%s" % index_name[1:]
         return index_name
+
+    def __repr__(self):
+        return '<%s: fields="%s">' % (self.__class__.__name__, ', '.join(self.fields))
+
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__) and (self.deconstruct() == other.deconstruct())
+
+    def __ne__(self, other):
+        return not (self == other)
