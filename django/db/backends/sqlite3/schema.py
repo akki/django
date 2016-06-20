@@ -160,6 +160,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
             'db_table': model._meta.db_table,
             'unique_together': unique_together,
             'index_together': index_together,
+            'indexes': model._meta.indexes,
             'apps': apps,
         }
         meta = type("Meta", tuple(), meta_contents)
