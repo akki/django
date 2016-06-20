@@ -9,32 +9,24 @@ Model index reference
 
 .. versionadded:: 1.11
 
-Index classes define a specific database index which can be created through
-them. This document explains the API references of :class:`Index` This
-includes the `index options`_ and `built-in indexes`_ Django offers. The
-indexes can be created in the database via
-the:class:`~django.db.migrations.operations.AddIndex` class as follows::
-
-    from django.db import migrations, models
-
-    class Migration(migrations.Migration):
-
-        operations = [
-            migrations.AddIndex(
-                model_name='Book',
-                models.Index('title', 'author', name='my_index_name')  # An index on the title and author fields
-            ),
-        ]
+Index classes ease creating database indexes. This document explains the API
+references of :class:`Index` This includes the `index options`_ and the
+`built-in indexes`_ that Django offers.
 
 .. note::
 
-    Technically, indexes are defined in `django.db.models.indexes`, but for
-    convenience they're imported into :mod:`django.db.models`; the standard
-    convention is to use ``from django.db import models`` and refer to the indexes
-    as ``models.<IndexClass>``.
+    Indexes are defined in ``django.db.models.indexes``, but for convenience
+    they're imported into :mod:`django.db.models`. The standard convention is
+    to use ``from django.db import models`` and refer to the indexes as
+    ``models.<IndexClass>``.
 
-Index options
-=============
+``Index`` options
+=================
+
+.. class:: Index(*fields, **options)
+
+``fields`` contains the names of the fields on which the index is desired.
+``options`` allows ``model`` and ``name`` parameters.
 
 ``*fields``
 -----------
@@ -57,30 +49,39 @@ optional argument.
 
 .. attribute:: Index.name
 
-The name of the index, if any, you want to keep in the database. If `name` is
-not provided Django will create a name internally on it's own. Index names
-cannot be longer than 30 characters.
+The name of the index. If ``name`` isn't provided Django will auto-generate a
+name. For compatibility with different databases, index names cannot be longer
+than 30 characters.
 
 Built-in indexes
 ================
 
-The various built-in index classes that Django provides are as follows:
+Django provides several built-in index classes:
 
 ``Index``
 ---------
 
 .. class:: Index(*fields, **options)
 
-    Creates the default index (B-Tree) in the database.
+    Creates an index (B-Tree) in the database.
 
-Writing your own Index class
-============================
+Creating an index
+=================
 
-If the built-in index classes do not suffice your needs you can define your
-own Index class by simply subclassing :class:`Index` class. The structure of
-``Index`` classes is as follows:
+Indexes can be created in the database using the
+:class:`~django.db.migrations.operations.AddIndex` operation. For example, to
+add an index on the ``title`` and ``author`` fields of the ``Book`` model::
 
-.. class:: Index(*fields, **options)
+    from django.db import migrations
 
-``fields`` will contain the names of the fields on which the index is desired.
-``options`` allows ``model`` and ``name`` parameters.
+    class Migration(migrations.Migration):
+
+        operations = [
+            migrations.AddIndex(
+                'Book',
+                models.Index('title', 'author', name='my_index_name'),
+            ),
+        ]
+
+Use the :class:`~django.db.migrations.operations.RemoveIndex` operation to
+remove an index.

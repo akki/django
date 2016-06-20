@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import hashlib
 
-from django.core.exceptions import ValidationError
 from django.utils.encoding import force_bytes
 
 __all__ = ['Index']
@@ -17,13 +16,11 @@ class Index(object):
 
     def __init__(self, *fields, **kwargs):
         if not fields:
-            raise ValueError("Minimum one field is required to define an index.")
+            raise ValueError('At least one field is required to define an index.')
         self.fields = fields
         self._name = kwargs.get('name', '')
         if len(self._name) > MAX_NAME_LENGTH:
-            raise ValidationError(
-                "Index names cannot be longer than %s chars." % MAX_NAME_LENGTH
-            )
+            raise ValueError("Index names cannot be longer than %s characters." % MAX_NAME_LENGTH)
         if 'model' in kwargs:
             self.model = kwargs['model']
 
@@ -47,23 +44,23 @@ class Index(object):
 
         quote_name = schema_editor.quote_name
         return schema_editor.sql_create_index % {
-            "table": quote_name(self.model._meta.db_table),
-            "name": quote_name(self.name),
-            "columns": ", ".join(quote_name(column) for column in columns),
-            "extra": tablespace_sql,
+            'table': quote_name(self.model._meta.db_table),
+            'name': quote_name(self.name),
+            'columns': ', '.join(quote_name(column) for column in columns),
+            'extra': tablespace_sql,
         }
 
     def remove_sql(self, schema_editor):
         quote_name = schema_editor.quote_name
         return schema_editor.sql_delete_index % {
-            "table": quote_name(self.model._meta.db_table),
-            "name": quote_name(self.name),
+            'table': quote_name(self.model._meta.db_table),
+            'name': quote_name(self.name),
         }
 
     def deconstruct(self):
         """
-        Returns a 3-tuple of class import path, positional arguments, and keyword
-        arguments.
+        Return a 3-tuple of class import path, positional arguments, and
+        keyword arguments.
         """
         path = "%s.%s" % (self.__class__.__module__, self.__class__.__name__)
         path = path.replace("django.db.models.indexes", "django.db.models")
@@ -105,7 +102,7 @@ class Index(object):
             index_name = index_name[1:]
         # It can't start with a number on Oracle, so prepend D if we need to
         if index_name[0].isdigit():
-            index_name = "D%s" % index_name[1:]
+            index_name = 'D%s' % index_name[1:]
         return index_name
 
     def __repr__(self):

@@ -1452,26 +1452,16 @@ class SchemaTests(TransactionTestCase):
         with connection.schema_editor() as editor:
             editor.create_model(Author)
         # Ensure the table is there and has no index
-        self.assertNotIn(
-            "title",
-            self.get_indexes(Author._meta.db_table),
-        )
-        # Alter to add the index
-        index = Index("name", model=Author, name="author_title_idx")
+        self.assertNotIn('title', self.get_indexes(Author._meta.db_table))
+        # Add the index
+        index = Index('name', model=Author, name='author_title_idx')
         with connection.schema_editor() as editor:
             editor.add_index(index)
-        # Ensure the table is there and has the index
-        self.assertIn(
-            "name",
-            self.get_indexes(Author._meta.db_table),
-        )
-        # Alter to drop the index
+        self.assertIn('name', self.get_indexes(Author._meta.db_table))
+        # Drop the index
         with connection.schema_editor() as editor:
             editor.remove_index(index)
-        self.assertNotIn(
-            "name",
-            self.get_indexes(Author._meta.db_table),
-        )
+        self.assertNotIn('name', self.get_indexes(Author._meta.db_table))
 
     def test_indexes(self):
         """
