@@ -30,7 +30,7 @@ class Index(object):
             self._name = self.get_name()
         return self._name
 
-    def create_sql(self, schema_editor, suffix=''):
+    def create_sql(self, schema_editor):
         columns = [field for field in self.fields]
         fields = [self.model._meta.get_field(field) for field in self.fields]
         if len(fields) == 1 and fields[0].db_tablespace:

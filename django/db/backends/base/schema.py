@@ -320,7 +320,7 @@ class BaseDatabaseSchemaEditor(object):
         """
         Add an index on a model.
         """
-        self.execute(index.create_sql(self, suffix='_idx'))
+        self.execute(index.create_sql(self))
 
     def remove_index(self, index):
         """
