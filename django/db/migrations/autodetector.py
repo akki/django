@@ -182,6 +182,7 @@ class MigrationAutodetector(object):
         self.generate_altered_fields()
         self.generate_altered_unique_together()
         self.generate_altered_index_together()
+        self.generate_altered_indexes()
         self.generate_altered_db_table()
         self.generate_altered_order_with_respect_to()
 
@@ -521,6 +522,9 @@ class MigrationAutodetector(object):
                     related_fields[field.name] = field
                 if getattr(field.remote_field, "through", None) and not field.remote_field.through._meta.auto_created:
                     related_fields[field.name] = field
+            # Are there any indexes to defer?
+            indexes = model_state.options['indexes']
+            model_state.options['indexes'] = []
             # Are there unique/index_together to defer?
             unique_together = model_state.options.pop('unique_together', None)
             index_together = model_state.options.pop('index_together', None)
@@ -581,6 +585,15 @@ class MigrationAutodetector(object):
                 for name, field in sorted(related_fields.items())
             ]
             related_dependencies.append((app_label, model_name, None, True))
+            for index in indexes:
+                self.add_operation(
+                    app_label,
+                    operations.AddIndex(
+                        model_name=model_name,
+                        index=index,
+                    ),
+                    dependencies=related_dependencies,
+                )
             if unique_together:
                 self.add_operation(
                     app_label,
@@ -904,6 +917,35 @@ class MigrationAutodetector(object):
                     # We cannot alter between m2m and concrete fields
                     self._generate_removed_field(app_label, model_name, field_name)
                     self._generate_added_field(app_label, model_name, field_name)
+
+    def generate_altered_indexes(self):
+        option_name = 'indexes'
+        for app_label, model_name in sorted(self.kept_model_keys):
+            old_model_name = self.renamed_models.get((app_label, model_name), model_name)
+            old_model_state = self.from_state.models[app_label, old_model_name]
+            new_model_state = self.to_state.models[app_label, model_name]
+
+            old_indexes = old_model_state.options.get(option_name)
+            new_indexes = new_model_state.options.get(option_name)
+            add_diff = [idx for idx in new_indexes if idx not in old_indexes]
+            rem_diff = [idx for idx in old_indexes if idx not in new_indexes]
+
+            for index in rem_diff:
+                self.add_operation(
+                    app_label,
+                    operations.RemoveIndex(
+                        model_name=model_name,
+                        name=index.name,
+                    )
+                )
+            for index in add_diff:
+                self.add_operation(
+                    app_label,
+                    operations.AddIndex(
+                        model_name=model_name,
+                        index=index,
+                    )
+                )
 
     def _get_dependecies_for_foreign_key(self, field):
         # Account for FKs to swappable models

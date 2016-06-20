@@ -99,6 +99,7 @@ class Options(object):
         self.db_table = ''
         self.ordering = []
         self._ordering_clash = False
+        self.indexes = []
         self.unique_together = []
         self.index_together = []
         self.select_on_save = False
@@ -189,6 +190,9 @@ class Options(object):
                 elif hasattr(self.meta, attr_name):
                     setattr(self, attr_name, getattr(self.meta, attr_name))
                     self.original_attrs[attr_name] = getattr(self, attr_name)
+
+            for index in self.indexes:
+                index.model = cls
 
             self.unique_together = normalize_together(self.unique_together)
             self.index_together = normalize_together(self.index_together)
