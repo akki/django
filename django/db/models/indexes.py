@@ -14,15 +14,14 @@ class Index(object):
 
     index_type = 'idx'
 
-    def __init__(self, *fields, **kwargs):
+    def __init__(self, fields=[], name=None):
         if not fields:
             raise ValueError('At least one field is required to define an index.')
         self.fields = fields
-        self._name = kwargs.get('name', '')
-        if len(self._name) > MAX_NAME_LENGTH:
-            raise ValueError("Index names cannot be longer than %s characters." % MAX_NAME_LENGTH)
-        if 'model' in kwargs:
-            self.model = kwargs['model']
+        self._name = name or ''
+        if self._name:
+            if len(self._name) > MAX_NAME_LENGTH:
+                raise ValueError("Index names cannot be longer than %s characters." % MAX_NAME_LENGTH)
 
     @property
     def name(self):
@@ -64,7 +63,7 @@ class Index(object):
         """
         path = "%s.%s" % (self.__class__.__module__, self.__class__.__name__)
         path = path.replace("django.db.models.indexes", "django.db.models")
-        return (path, self.fields, {})
+        return (path, (), {'fields': self.fields})
 
     @staticmethod
     def _hash_generator(*args):
@@ -87,7 +86,7 @@ class Index(object):
         """
         table_name = self.model._meta.db_table
         column_names = self.fields
-        hash_data = (table_name,) + column_names + (self.index_type,)
+        hash_data = [table_name] + column_names + [self.index_type]
         index_unique_hash = self._hash_generator(*hash_data)
         table_part = table_name.replace('"', '').replace('.', '_')
         field_part = column_names[0].replace('"', '').replace('.', '_')

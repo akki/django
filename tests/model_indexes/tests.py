@@ -9,20 +9,21 @@ class IndexesTests(TestCase):
     def test_raises_error_without_field(self):
         msg = "At least one field is required to define an index."
         with self.assertRaisesMessage(ValueError, msg):
-            models.Index(model=Book)
+            models.Index()
 
     def test_max_name_length(self):
         msg = "Index names cannot be longer than 30 characters."
         with self.assertRaisesMessage(ValueError, msg):
-            models.Index('title', name='looooooooooooong_index_name_idx')
+            models.Index(fields=['title'], name='looooooooooooong_index_name_idx')
 
     def test_name(self):
-        index = models.Index('author', 'title', model=Book)
+        index = models.Index(fields=['author', 'title'])
+        index.model = Book
         self.assertEqual(index.name, 'model_index_author_de9d81_idx')
 
     def test_deconstruction(self):
-        index = models.Index('title')
+        index = models.Index(fields=['title'])
         path, args, kwargs = index.deconstruct()
         self.assertEqual(path, "django.db.models.Index")
-        self.assertEqual(args, ('title',))
-        self.assertEqual(kwargs, {})
+        self.assertEqual(args, ())
+        self.assertEqual(kwargs, {'fields': ['title']})

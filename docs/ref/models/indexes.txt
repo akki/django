@@ -23,26 +23,14 @@ references of :class:`Index` This includes the `index options`_ and the
 ``Index`` options
 =================
 
-.. class:: Index(*fields, **options)
-
-``fields`` contains the names of the fields on which the index is desired.
-``options`` allows ``model`` and ``name`` parameters.
+.. class:: Index(fields, name)
 
 ``*fields``
 -----------
 
 .. attribute:: Index.fields
 
-Index classes take the field names of which they are being used as arguments
-directly during initialization.
-
-``model``
----------
-
-.. attribute:: Index.model
-
-The model representing the table on which the index has to be set. This is an
-optional argument.
+A list of the name of the fields on which the index is desired.
 
 ``name``
 --------
@@ -51,7 +39,7 @@ optional argument.
 
 The name of the index. If ``name`` isn't provided Django will auto-generate a
 name. For compatibility with different databases, index names cannot be longer
-than 30 characters.
+than 30 characters and should not start with a number(0-9) or underscore(_).
 
 Built-in indexes
 ================
@@ -61,7 +49,7 @@ Django provides several built-in index classes:
 ``Index``
 ---------
 
-.. class:: Index(*fields, **options)
+.. class:: Index(fields, name=None)
 
     Creates an index (B-Tree) in the database.
 
@@ -79,7 +67,7 @@ add an index on the ``title`` and ``author`` fields of the ``Book`` model::
         operations = [
             migrations.AddIndex(
                 'Book',
-                models.Index('title', 'author', name='my_index_name'),
+                models.Index(fields=['title', 'author'], name='my_index_name'),
             ),
         ]
 

@@ -99,7 +99,7 @@ class OperationTestBase(MigrationTestBase):
         if multicol_index:
             operations.append(migrations.AddIndex(
                 "Pony",
-                models.Index("pink", "weight", name="pony_test_idx")
+                models.Index(fields=["pink", "weight"], name="pony_test_idx")
             ))
         if second_model:
             operations.append(migrations.CreateModel(
@@ -1385,7 +1385,7 @@ class OperationTests(OperationTestBase):
         Test the AddIndex operation.
         """
         project_state = self.set_up_test_model("test_adin")
-        index = models.Index("pink")
+        index = models.Index(fields=["pink"])
         operation = migrations.AddIndex("Pony", index)
         self.assertEqual(operation.describe(), "Create index on field(s) pink of model Pony")
         new_state = project_state.clone()
