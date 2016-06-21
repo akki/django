@@ -12,11 +12,23 @@ class IndexesTests(TestCase):
             models.Index()
 
     def test_max_name_length(self):
+        # When user provides index name longer than 30 characters
         msg = "Index names cannot be longer than 30 characters."
         with self.assertRaisesMessage(ValueError, msg):
             models.Index(fields=['title'], name='looooooooooooong_index_name_idx')
 
-    def test_name(self):
+        # To check if auto-generated name is not more than 30 characters
+        index = models.Index(fields=['title'])
+        index.model = Book
+        self.assertTrue(len(index.name) <= 30)
+
+    def test_name_constraints(self):
+        index = models.Index(fields=['title'], name='_name_starting_with_underscore')
+        self.assertEqual(index.name, 'Dname_starting_with_underscore')
+        index = models.Index(fields=['title'], name='5name_starting_with_number')
+        self.assertEqual(index.name, 'Dname_starting_with_number')
+
+    def test_name_auto_generation(self):
         index = models.Index(fields=['author', 'title'])
         index.model = Book
         self.assertEqual(index.name, 'model_index_author_de9d81_idx')

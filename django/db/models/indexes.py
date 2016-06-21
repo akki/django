@@ -20,6 +20,7 @@ class Index(object):
         self.fields = fields
         self._name = name or ''
         if self._name:
+            self.normalise_name()
             if len(self._name) > MAX_NAME_LENGTH:
                 raise ValueError("Index names cannot be longer than %s characters." % MAX_NAME_LENGTH)
 
@@ -27,7 +28,16 @@ class Index(object):
     def name(self):
         if not self._name:
             self._name = self.get_name()
+            self.normalise_name()
         return self._name
+
+    def normalise_name(self):
+        # Name shouldn't start with an underscore (Oracle hates this), so prepend D if we need to
+        if self._name[0] == "_":
+            self._name = 'D%s' % self._name[1:]
+        # It can't start with a number on Oracle, so prepend D if we need to
+        elif self._name[0].isdigit():
+            self._name = 'D%s' % self._name[1:]
 
     def create_sql(self, schema_editor):
         columns = [field for field in self.fields]
@@ -95,13 +105,9 @@ class Index(object):
             table_part = table_part[:11]
         if len(field_part) > 7:
             field_part = field_part[:7]
+        if len(hash_part) > 10:
+            hash_part = hash_part[:10]
         index_name = '%s_%s_%s' % (table_part, field_part, hash_part)
-        # It shouldn't start with an underscore (Oracle hates this)
-        if index_name[0] == "_":
-            index_name = index_name[1:]
-        # It can't start with a number on Oracle, so prepend D if we need to
-        if index_name[0].isdigit():
-            index_name = 'D%s' % index_name[1:]
         return index_name
 
     def __repr__(self):
