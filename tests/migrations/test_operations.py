@@ -1404,7 +1404,7 @@ class OperationTests(OperationTestBase):
         definition = operation.deconstruct()
         self.assertEqual(definition[0], "AddIndex")
         self.assertEqual(definition[1], [])
-        self.assertEqual(definition[2], {'model_name': 'Pony', 'index': index})
+        self.assertEqual(definition[2], {'model_name': "Pony", 'index': index})
 
     def test_remove_index(self):
         """
@@ -1432,7 +1432,7 @@ class OperationTests(OperationTestBase):
         definition = operation.deconstruct()
         self.assertEqual(definition[0], "RemoveIndex")
         self.assertEqual(definition[1], [])
-        self.assertEqual(definition[2], {'model_name': "Pony", 'name': 'pony_test_idx'})
+        self.assertEqual(definition[2], {'model_name': "Pony", 'name': "pony_test_idx"})
 
     def test_alter_index_together(self):
         """

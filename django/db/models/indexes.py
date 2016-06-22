@@ -22,7 +22,7 @@ class Index(object):
         if self._name:
             errors = self.check_name()
             if len(self._name) > MAX_NAME_LENGTH:
-                errors.append("Index names cannot be longer than %s characters." % MAX_NAME_LENGTH)
+                errors.append('Index names cannot be longer than %s characters.' % MAX_NAME_LENGTH)
             if errors:
                 raise ValueError(errors)
 
@@ -36,12 +36,12 @@ class Index(object):
     def check_name(self):
         errors = []
         # Name shouldn't start with an underscore (Oracle hates this), so prepend D if we need to
-        if self._name[0] == "_":
-            errors.append('Index names cannot start with an underscore(_).')
+        if self._name[0] == '_':
+            errors.append('Index names cannot start with an underscore (_).')
             self._name = 'D%s' % self._name[1:]
         # It can't start with a number on Oracle, so prepend D if we need to
         elif self._name[0].isdigit():
-            errors.append('Index names cannot start with a number(0-9).')
+            errors.append('Index names cannot start with a number (0-9).')
             self._name = 'D%s' % self._name[1:]
         return errors
 
@@ -53,9 +53,9 @@ class Index(object):
         elif self.model._meta.db_tablespace:
             tablespace_sql = schema_editor.connection.ops.tablespace_sql(self.model._meta.db_tablespace)
         else:
-            tablespace_sql = ""
+            tablespace_sql = ''
         if tablespace_sql:
-            tablespace_sql = " " + tablespace_sql
+            tablespace_sql = ' ' + tablespace_sql
 
         quote_name = schema_editor.quote_name
         return schema_editor.sql_create_index % {
@@ -73,12 +73,8 @@ class Index(object):
         }
 
     def deconstruct(self):
-        """
-        Return a 3-tuple of class import path, positional arguments, and
-        keyword arguments.
-        """
-        path = "%s.%s" % (self.__class__.__module__, self.__class__.__name__)
-        path = path.replace("django.db.models.indexes", "django.db.models")
+        path = '%s.%s' % (self.__class__.__module__, self.__class__.__name__)
+        path = path.replace('django.db.models.indexes', 'django.db.models')
         return (path, (), {'fields': self.fields})
 
     @staticmethod
@@ -117,7 +113,7 @@ class Index(object):
         return index_name
 
     def __repr__(self):
-        return '<%s: fields="%s">' % (self.__class__.__name__, ', '.join(self.fields))
+        return "<%s: fields='%s'>" % (self.__class__.__name__, ', '.join(self.fields))
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__) and (self.deconstruct() == other.deconstruct())

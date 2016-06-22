@@ -39,7 +39,7 @@ A list of the name of the fields on which the index is desired.
 
 The name of the index. If ``name`` isn't provided Django will auto-generate a
 name. For compatibility with different databases, index names cannot be longer
-than 30 characters and should not start with a number(0-9) or underscore(_).
+than 30 characters and should not start with a number (0-9) or underscore (_).
 
 Built-in indexes
 ================

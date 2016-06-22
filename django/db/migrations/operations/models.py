@@ -776,7 +776,7 @@ class AddIndex(Operation):
         )
 
     def describe(self):
-        return "Create index on field(s) %s of model %s" % (
+        return 'Create index on field(s) %s of model %s' % (
             ', '.join(self.index.fields),
             self.model_name,
         )
@@ -818,4 +818,4 @@ class RemoveIndex(Operation):
         )
 
     def describe(self):
-        return "Remove index %s from %s" % (self.name, self.model_name)
+        return 'Remove index %s from %s' % (self.name, self.model_name)
