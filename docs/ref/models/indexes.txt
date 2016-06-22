@@ -3,15 +3,13 @@ Model index reference
 =====================
 
 .. module:: django.db.models.indexes
-   :synopsis: Built-in index types.
 
 .. currentmodule:: django.db.models
 
 .. versionadded:: 1.11
 
 Index classes ease creating database indexes. This document explains the API
-references of :class:`Index` This includes the `index options`_ and the
-`built-in indexes`_ that Django offers.
+references of :class:`Index` which includes the `index options`_.
 
 .. note::
 
@@ -23,9 +21,11 @@ references of :class:`Index` This includes the `index options`_ and the
 ``Index`` options
 =================
 
-.. class:: Index(fields, name)
+.. class:: Index(fields=[], name=None)
 
-``*fields``
+    Creates an index (B-Tree) in the database.
+
+``fields``
 -----------
 
 .. attribute:: Index.fields
@@ -40,18 +40,6 @@ A list of the name of the fields on which the index is desired.
 The name of the index. If ``name`` isn't provided Django will auto-generate a
 name. For compatibility with different databases, index names cannot be longer
 than 30 characters and should not start with a number (0-9) or underscore (_).
-
-Built-in indexes
-================
-
-Django provides several built-in index classes:
-
-``Index``
----------
-
-.. class:: Index(fields, name=None)
-
-    Creates an index (B-Tree) in the database.
 
 Creating an index
 =================

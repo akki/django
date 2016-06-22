@@ -201,7 +201,9 @@ is set, its column name).
 
 Creates a new index in the database table for the given model. ``model_name``
 is the model's name and ``index`` is an instance of the
-:class:`~django.db.models.Index` class.
+:class:`~django.db.models.Index` class. It is highly recommended to pass a name
+of your choice to ``index`` if you are adding this migration directly from your
+migrations file.
 
 ``RemoveIndex``
 ---------------
@@ -210,7 +212,8 @@ is the model's name and ``index`` is an instance of the
 
 .. versionadded:: 1.11
 
-Removes the provided index from the given model.
+Removes the provided index from the given model. ``model_name`` is the model's
+name and ``name`` is the name of the index to be deleted.
 
 Special Operations
 ==================
