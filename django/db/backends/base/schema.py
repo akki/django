@@ -848,12 +848,7 @@ class BaseDatabaseSchemaEditor(object):
             index_name = "D%s" % index_name[:-1]
         return index_name
 
-    def _create_index_sql(self, model, fields, suffix="", sql=None):
-        """
-        Return the SQL statement to create the index for one or several fields.
-        `sql` can be specified if the syntax differs from the standard (GIS
-        indexes, ...).
-        """
+    def _get_index_tablespace_sql(self, model, fields):
         if len(fields) == 1 and fields[0].db_tablespace:
             tablespace_sql = self.connection.ops.tablespace_sql(fields[0].db_tablespace)
         elif model._meta.db_tablespace:
@@ -862,7 +857,15 @@ class BaseDatabaseSchemaEditor(object):
             tablespace_sql = ""
         if tablespace_sql:
             tablespace_sql = " " + tablespace_sql
+        return tablespace_sql
 
+    def _create_index_sql(self, model, fields, suffix="", sql=None):
+        """
+        Return the SQL statement to create the index for one or several fields.
+        `sql` can be specified if the syntax differs from the standard (GIS
+        indexes, ...).
+        """
+        tablespace_sql = self._get_index_tablespace_sql(model, fields)
         columns = [field.column for field in fields]
         sql_create_index = sql or self.sql_create_index
         return sql_create_index % {

@@ -46,16 +46,9 @@ class Index(object):
         return errors
 
     def create_sql(self, schema_editor):
-        columns = [field for field in self.fields]
         fields = [self.model._meta.get_field(field) for field in self.fields]
-        if len(fields) == 1 and fields[0].db_tablespace:
-            tablespace_sql = schema_editor.connection.ops.tablespace_sql(fields[0].db_tablespace)
-        elif self.model._meta.db_tablespace:
-            tablespace_sql = schema_editor.connection.ops.tablespace_sql(self.model._meta.db_tablespace)
-        else:
-            tablespace_sql = ''
-        if tablespace_sql:
-            tablespace_sql = ' ' + tablespace_sql
+        tablespace_sql = schema_editor._get_index_tablespace_sql(self.model, fields)
+        columns = [field.column for field in fields]
 
         quote_name = schema_editor.quote_name
         return schema_editor.sql_create_index % {
@@ -97,7 +90,8 @@ class Index(object):
         fit its size by truncating the excess length.
         """
         table_name = self.model._meta.db_table
-        column_names = self.fields
+        fields = [self.model._meta.get_field(field) for field in self.fields]
+        column_names = [field.column for field in fields]
         hash_data = [table_name] + column_names + [self.index_type]
         index_unique_hash = self._hash_generator(*hash_data)
         table_part = table_name.replace('"', '').replace('.', '_')

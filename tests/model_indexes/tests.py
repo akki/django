@@ -6,6 +6,19 @@ from .models import Book
 
 class IndexesTests(TestCase):
 
+    def test_repr(self):
+        index = models.Index(fields=['title'])
+        multi_col_index = models.Index(fields=['title', 'author'])
+        self.assertEqual(repr(index), "<Index: fields='title'>")
+        self.assertEqual(repr(multi_col_index), "<Index: fields='title, author'>")
+
+    def test_eq(self):
+        index = models.Index(fields=['title'])
+        same_index = models.Index(fields=['title'])
+        another_index = models.Index(fields=['title', 'author'])
+        self.assertEqual(index, same_index)
+        self.assertNotEqual(index, another_index)
+
     def test_raises_error_without_field(self):
         msg = 'At least one field is required to define an index.'
         with self.assertRaisesMessage(ValueError, msg):
@@ -17,11 +30,6 @@ class IndexesTests(TestCase):
         with self.assertRaisesMessage(ValueError, msg):
             models.Index(fields=['title'], name='looooooooooooong_index_name_idx')
 
-        # To check if auto-generated name is not more than 30 characters
-        index = models.Index(fields=['title'])
-        index.model = Book
-        self.assertTrue(len(index.name) <= 30)
-
     def test_name_constraints(self):
         msg = 'Index names cannot start with an underscore (_).'
         with self.assertRaisesMessage(ValueError, msg):
@@ -32,9 +40,16 @@ class IndexesTests(TestCase):
             models.Index(fields=['title'], name='5name_starting_with_number')
 
     def test_name_auto_generation(self):
-        index = models.Index(fields=['author', 'title'])
+        index = models.Index(fields=['author'])
         index.model = Book
-        self.assertEqual(index.name, 'model_index_author_de9d81_idx')
+        self.assertEqual(index.name, 'model_index_author_0f5565_idx')
+        # Test field_part truncation and that db_column is used for naming index
+        long_field_index = models.Index(fields=['pages'])
+        long_field_index.model = Book
+        self.assertEqual(long_field_index.name, 'model_index_page_co_69235a_idx')
+        # Test hash_part truncation
+        index_name = long_field_index.get_name(suffix='_suffix')
+        self.assertEqual(index_name, 'model_index_page_co_69235a_suf')
 
     def test_deconstruction(self):
         index = models.Index(fields=['title'])
