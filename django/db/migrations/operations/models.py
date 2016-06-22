@@ -755,8 +755,7 @@ class AddIndex(Operation):
 
     def state_forwards(self, app_label, state):
         model_state = state.models[app_label, self.model_name.lower()]
-        if not hasattr(self.index, 'model'):
-            self.index.model = state.apps.get_model(app_label, self.model_name)
+        self.index.model = state.apps.get_model(app_label, self.model_name)
         model_state.options['indexes'].append(self.index)
 
     def database_forwards(self, app_label, schema_editor, from_state, to_state):
