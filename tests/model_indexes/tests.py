@@ -23,10 +23,13 @@ class IndexesTests(TestCase):
         self.assertTrue(len(index.name) <= 30)
 
     def test_name_constraints(self):
-        index = models.Index(fields=['title'], name='_name_starting_with_underscore')
-        self.assertEqual(index.name, 'Dname_starting_with_underscore')
-        index = models.Index(fields=['title'], name='5name_starting_with_number')
-        self.assertEqual(index.name, 'Dname_starting_with_number')
+        msg = 'Index names cannot start with an underscore(_).'
+        with self.assertRaisesMessage(ValueError, msg):
+            models.Index(fields=['title'], name='_name_starting_with_underscore')
+
+        msg = 'Index names cannot start with a number(0-9).'
+        with self.assertRaisesMessage(ValueError, msg):
+            models.Index(fields=['title'], name='5name_starting_with_number')
 
     def test_name_auto_generation(self):
         index = models.Index(fields=['author', 'title'])

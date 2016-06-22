@@ -20,24 +20,30 @@ class Index(object):
         self.fields = fields
         self._name = name or ''
         if self._name:
-            self.normalise_name()
+            errors = self.check_name()
             if len(self._name) > MAX_NAME_LENGTH:
-                raise ValueError("Index names cannot be longer than %s characters." % MAX_NAME_LENGTH)
+                errors.append("Index names cannot be longer than %s characters." % MAX_NAME_LENGTH)
+            if errors:
+                raise ValueError(errors)
 
     @property
     def name(self):
         if not self._name:
             self._name = self.get_name()
-            self.normalise_name()
+            self.check_name()
         return self._name
 
-    def normalise_name(self):
+    def check_name(self):
+        errors = []
         # Name shouldn't start with an underscore (Oracle hates this), so prepend D if we need to
         if self._name[0] == "_":
+            errors.append('Index names cannot start with an underscore(_).')
             self._name = 'D%s' % self._name[1:]
         # It can't start with a number on Oracle, so prepend D if we need to
         elif self._name[0].isdigit():
+            errors.append('Index names cannot start with a number(0-9).')
             self._name = 'D%s' % self._name[1:]
+        return errors
 
     def create_sql(self, schema_editor):
         columns = [field for field in self.fields]
