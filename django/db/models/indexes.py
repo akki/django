@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import hashlib
 
 from django.utils.encoding import force_bytes
+from django.utils.functional import cached_property
 
 __all__ = ['Index']
 
@@ -26,7 +27,7 @@ class Index(object):
             if errors:
                 raise ValueError(errors)
 
-    @property
+    @cached_property
     def name(self):
         if not self._name:
             self._name = self.get_name()
