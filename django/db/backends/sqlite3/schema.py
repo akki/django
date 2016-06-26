@@ -68,7 +68,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
             raise ValueError("Cannot quote parameter value %r of type %s" % (value, type(value)))
 
     def _remake_table(self, model, create_fields=[], delete_fields=[], alter_fields=[], override_uniques=None,
-                      override_indexes=None):
+                      override_indexes=None, add_index=[]):
         """
         Shortcut to transform a model from old_model into new_model
 
@@ -141,6 +141,10 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         # the dummy model is constructed.
         body = copy.deepcopy(body)
 
+        # Update indexes created using Index class
+        indexes = model._meta.indexes
+        indexes.extend(add_index)
+
         # Work out the new value of unique_together, taking renames into
         # account
         if override_uniques is None:
@@ -163,6 +167,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
             'db_table': model._meta.db_table,
             'unique_together': override_uniques,
             'index_together': override_indexes,
+            'indexes': indexes,
             'apps': apps,
         }
         meta = type("Meta", tuple(), meta_contents)

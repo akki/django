@@ -757,8 +757,12 @@ class AddIndex(Operation):
         model_state = state.models[app_label, self.model_name.lower()]
         self.index.model = state.apps.get_model(app_label, self.model_name)
         model_state.options['indexes'].append(self.index)
+        # if app_label == 'myapp':
+        #     print 'In state_forwards of operations.models.AddIndex'
+        #     print model_state.options
 
     def database_forwards(self, app_label, schema_editor, from_state, to_state):
+        # print from_state['lkjlkj']
         schema_editor.add_index(self.index)
 
     def database_backwards(self, app_label, schema_editor, from_state, to_state):

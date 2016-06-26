@@ -365,6 +365,28 @@ class AutodetectorTests(TestCase):
         ("authors", models.ManyToManyField("testapp.Author", through="otherapp.Attribution")),
         ("title", models.CharField(max_length=200)),
     ])
+    book_indexes = ModelState("otherapp", "Book", [
+        ("id", models.AutoField(primary_key=True)),
+        ("author", models.ForeignKey("testapp.Author", models.CASCADE)),
+        ("title", models.CharField(max_length=200)),
+    ], {
+        "indexes": [models.Index("author", "title", name='book_title_author_idx')],
+    })
+    book_unordered_indexes = ModelState("otherapp", "Book", [
+        ("id", models.AutoField(primary_key=True)),
+        ("author", models.ForeignKey("testapp.Author", models.CASCADE)),
+        ("title", models.CharField(max_length=200)),
+    ], {
+        "indexes": [models.Index("title", "author", name='book_author_title_idx')],
+    })
+    book_newfield_indexes = ModelState("otherapp", "Book", [
+        ("id", models.AutoField(primary_key=True)),
+        ("newfield", models.IntegerField()),
+        ("author", models.ForeignKey("testapp.Author", models.CASCADE)),
+        ("title", models.CharField(max_length=200)),
+    ], {
+        "indexes": [models.Index("title", "newfield", name='book_title_newfield_idx')],
+    })
     book_foo_together = ModelState("otherapp", "Book", [
         ("id", models.AutoField(primary_key=True)),
         ("author", models.ForeignKey("testapp.Author", models.CASCADE)),
@@ -455,12 +477,12 @@ class AutodetectorTests(TestCase):
                 self.repr_changes(changes),
             ))
 
-    def assertMigrationDependencies(self, changes, app_label, index, dependencies):
+    def assertMigrationDependencies(self, changes, app_label, position, dependencies):
         if not changes.get(app_label):
             self.fail("No migrations found for %s\n%s" % (app_label, self.repr_changes(changes)))
-        if len(changes[app_label]) < index + 1:
-            self.fail("No migration at index %s for %s\n%s" % (index, app_label, self.repr_changes(changes)))
-        migration = changes[app_label][index]
+        if len(changes[app_label]) < position + 1:
+            self.fail("No migration at index %s for %s\n%s" % (position, app_label, self.repr_changes(changes)))
+        migration = changes[app_label][position]
         if set(migration.dependencies) != set(dependencies):
             self.fail("Migration dependencies mismatch for %s.%s (expected %s):\n%s" % (
                 app_label,
@@ -469,12 +491,12 @@ class AutodetectorTests(TestCase):
                 self.repr_changes(changes, include_dependencies=True),
             ))
 
-    def assertOperationTypes(self, changes, app_label, index, types):
+    def assertOperationTypes(self, changes, app_label, position, types):
         if not changes.get(app_label):
             self.fail("No migrations found for %s\n%s" % (app_label, self.repr_changes(changes)))
-        if len(changes[app_label]) < index + 1:
-            self.fail("No migration at index %s for %s\n%s" % (index, app_label, self.repr_changes(changes)))
-        migration = changes[app_label][index]
+        if len(changes[app_label]) < position + 1:
+            self.fail("No migration at index %s for %s\n%s" % (position, app_label, self.repr_changes(changes)))
+        migration = changes[app_label][position]
         real_types = [operation.__class__.__name__ for operation in migration.operations]
         if types != real_types:
             self.fail("Operation type mismatch for %s.%s (expected %s):\n%s" % (
@@ -484,13 +506,13 @@ class AutodetectorTests(TestCase):
                 self.repr_changes(changes),
             ))
 
-    def assertOperationAttributes(self, changes, app_label, index, operation_index, **attrs):
+    def assertOperationAttributes(self, changes, app_label, position, operation_index, **attrs):
         if not changes.get(app_label):
             self.fail("No migrations found for %s\n%s" % (app_label, self.repr_changes(changes)))
-        if len(changes[app_label]) < index + 1:
-            self.fail("No migration at index %s for %s\n%s" % (index, app_label, self.repr_changes(changes)))
-        migration = changes[app_label][index]
-        if len(changes[app_label]) < index + 1:
+        if len(changes[app_label]) < position + 1:
+            self.fail("No migration at index %s for %s\n%s" % (position, app_label, self.repr_changes(changes)))
+        migration = changes[app_label][position]
+        if len(changes[app_label]) < position + 1:
             self.fail("No operation at index %s for %s.%s\n%s" % (
                 operation_index,
                 app_label,
@@ -510,13 +532,13 @@ class AutodetectorTests(TestCase):
                     self.repr_changes(changes),
                 ))
 
-    def assertOperationFieldAttributes(self, changes, app_label, index, operation_index, **attrs):
+    def assertOperationFieldAttributes(self, changes, app_label, position, operation_index, **attrs):
         if not changes.get(app_label):
             self.fail("No migrations found for %s\n%s" % (app_label, self.repr_changes(changes)))
-        if len(changes[app_label]) < index + 1:
-            self.fail("No migration at index %s for %s\n%s" % (index, app_label, self.repr_changes(changes)))
-        migration = changes[app_label][index]
-        if len(changes[app_label]) < index + 1:
+        if len(changes[app_label]) < position + 1:
+            self.fail("No migration at index %s for %s\n%s" % (position, app_label, self.repr_changes(changes)))
+        migration = changes[app_label][position]
+        if len(changes[app_label]) < position + 1:
             self.fail("No operation at index %s for %s.%s\n%s" % (
                 operation_index,
                 app_label,
@@ -1129,6 +1151,59 @@ class AutodetectorTests(TestCase):
 
         for t in tests:
             test(*t)
+
+    def test_create_model_with_indexes(self):
+        """ Test creation of new model with indexes already defined """
+        author = ModelState("otherapp", "Author", [
+            ("id", models.AutoField(primary_key=True)),
+            ("name", models.CharField(max_length=200)),
+        ], {"indexes":[models.Index('name')]})
+        before = self.make_project_state([])
+        after = self.make_project_state([author])
+        autodetector = MigrationAutodetector(before, after)
+        changes = autodetector._detect_changes()
+        # Right number of migrations?
+        self.assertEqual(len(changes['otherapp']), 1)
+        # Right number of actions?
+        migration = changes['otherapp'][0]
+        self.assertEqual(len(migration.operations), 2)
+        # Right actions order?
+        self.assertOperationTypes(changes, 'otherapp', 0, ['CreateModel', 'AddIndex'])
+
+    def test_add_indexes(self):
+        """Test change detection of new indexes"""
+        before = self.make_project_state([self.author_empty, self.book])
+        after = self.make_project_state([self.author_empty, self.book_indexes])
+        autodetector = MigrationAutodetector(before, after)
+        changes = autodetector._detect_changes()
+        self.assertNumberMigrations(changes, "otherapp", 1)
+        self.assertOperationTypes(changes, "otherapp", 0, ["AddIndex"])
+        added_index = models.Index('author', 'title', name="book_title_author_idx")
+        self.assertOperationAttributes(changes, "otherapp", 0, 0, model_name="book", index=added_index)
+
+    def test_remove_indexes(self):
+        """Test change detection of removed indexes."""
+        # Make state
+        before = self.make_project_state([self.author_empty, self.book_indexes])
+        after = self.make_project_state([self.author_empty, self.book])
+        autodetector = MigrationAutodetector(before, after)
+        changes = autodetector._detect_changes()
+        # Right number/type of migrations?
+        self.assertNumberMigrations(changes, "otherapp", 1)
+        self.assertOperationTypes(changes, "otherapp", 0, ["RemoveIndex"])
+        self.assertOperationAttributes(changes, "otherapp", 0, 0, model_name="book", name="book_title_author_idx")
+
+    def test_order_fields_indexes(self):
+        """Test change detection of re-ordering of fields in indexes."""
+        before = self.make_project_state([self.author_empty, self.book_indexes])
+        after = self.make_project_state([self.author_empty, self.book_unordered_indexes])
+        autodetector = MigrationAutodetector(before, after)
+        changes = autodetector._detect_changes()
+        self.assertNumberMigrations(changes, "otherapp", 1)
+        self.assertOperationTypes(changes, "otherapp", 0, ["RemoveIndex", "AddIndex"])
+        self.assertOperationAttributes(changes, "otherapp", 0, 0, model_name="book", name="book_title_author_idx")
+        added_index = models.Index('title', 'author', name="book_author_title_idx")
+        self.assertOperationAttributes(changes, "otherapp", 0, 1, model_name="book", index=added_index)
 
     def test_add_foo_together(self):
         """Tests index/unique_together detection."""

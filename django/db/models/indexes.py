@@ -69,7 +69,7 @@ class Index(object):
     def deconstruct(self):
         path = '%s.%s' % (self.__class__.__module__, self.__class__.__name__)
         path = path.replace('django.db.models.indexes', 'django.db.models')
-        return (path, (), {'fields': self.fields})
+        return (path, (), {'fields': self.fields, 'name': self.name})
 
     @staticmethod
     def _hash_generator(*args):
@@ -111,7 +111,8 @@ class Index(object):
         return "<%s: fields='%s'>" % (self.__class__.__name__, ', '.join(self.fields))
 
     def __eq__(self, other):
-        return (self.__class__ == other.__class__) and (self.deconstruct() == other.deconstruct())
+        eq = (self.__class__ == other.__class__) and (self.fields == other.fields) and (self.model == other.model)
+        return eq
 
     def __ne__(self, other):
         return not (self == other)

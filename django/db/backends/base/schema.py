@@ -877,8 +877,8 @@ class BaseDatabaseSchemaEditor(object):
 
     def _model_indexes_sql(self, model):
         """
-        Return all index SQL statements (field indexes, index_together) for the
-        specified model, as a list.
+        Return all index SQL statements (field indexes, index_together, using
+        Index class) for the specified model, as a list.
         """
         if not model._meta.managed or model._meta.proxy or model._meta.swapped:
             return []
@@ -890,6 +890,9 @@ class BaseDatabaseSchemaEditor(object):
         for field_names in model._meta.index_together:
             fields = [model._meta.get_field(field) for field in field_names]
             output.append(self._create_index_sql(model, fields, suffix="_idx"))
+
+        for index in model._meta.indexes:
+            output.append(index.create_sql(self, suffix='_idx'))
         return output
 
     def _rename_field_sql(self, table, old_field, new_field, new_type):
