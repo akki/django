@@ -353,6 +353,13 @@ class ModelState(object):
                     'ModelState.fields cannot refer to a model class - "%s.through" does. '
                     'Use a string reference instead.' % name
                 )
+        # Sanity-check that indexes have their names set.
+        for index in self.options['indexes']:
+            if not index._name:
+                raise ValueError(
+                    "Indexes passed to ModelState require a name attribute, "
+                    "%r doesn't have one." % index
+                )
 
     @cached_property
     def name_lower(self):
@@ -403,6 +410,12 @@ class ModelState(object):
                 elif name == "index_together":
                     it = model._meta.original_attrs["index_together"]
                     options[name] = set(normalize_together(it))
+                elif name == "indexes":
+                    indexes = model._meta.original_attrs["indexes"]
+                    for index in indexes:
+                        # Set index._name of all indexes by calling index.name
+                        index.name
+                    options[name] = indexes
                 else:
                     options[name] = model._meta.original_attrs[name]
         # Force-convert all options to text_type (#23226)
