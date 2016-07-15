@@ -351,7 +351,10 @@ class MigrationAutodetector(object):
         # Optimize migrations
         for app_label, migrations in self.migrations.items():
             for migration in migrations:
-                migration.operations = MigrationOptimizer().optimize(migration.operations, app_label=app_label)
+                opt_operations = MigrationOptimizer().optimize(migration.operations, app_label=app_label)
+                # Preserve the order if no optmization took place
+                if len(opt_operations) < len(migration.operations):
+                    migration.operations = opt_operations
 
     def check_dependency(self, operation, dependency):
         """
