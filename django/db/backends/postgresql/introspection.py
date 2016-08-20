@@ -222,10 +222,10 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         cursor.execute("""
             SELECT
                 indexname, array_agg(attname), indisunique, indisprimary,
-                array_agg(ordering)
+                array_agg(ordering), amname
             FROM (
                 SELECT
-                    c2.relname as indexname, idx.*, attr.attname,
+                    c2.relname as indexname, idx.*, attr.attname, am.amname,
                     CASE
                         WHEN am.amcanorder THEN
                             CASE (option & 1)
@@ -244,9 +244,9 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
                     AND c2.relam=am.oid
                     AND c.relname = %s
             ) s2
-            GROUP BY indexname, indisunique, indisprimary;
+            GROUP BY indexname, indisunique, indisprimary, amname;
         """, [table_name])
-        for index, columns, unique, primary, orders in cursor.fetchall():
+        for index, columns, unique, primary, orders, type_ in cursor.fetchall():
             if index not in constraints:
                 constraints[index] = {
                     "columns": columns,
@@ -256,5 +256,6 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
                     "foreign_key": None,
                     "check": False,
                     "index": True,
+                    "type": type_,  # type of index, e.g. btree, hash, etc.
                 }
         return constraints
