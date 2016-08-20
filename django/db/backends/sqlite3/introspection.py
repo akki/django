@@ -1,9 +1,11 @@
 import re
+import warnings
 from collections import namedtuple
 
 from django.db.backends.base.introspection import (
     BaseDatabaseIntrospection, FieldInfo, TableInfo,
 )
+from django.utils.deprecation import RemovedInDjango21Warning
 
 field_size_re = re.compile(r'^\s*(?:var)?char\s*\(\s*(\d+)\s*\)\s*$')
 FieldInfo = namedtuple('FieldInfo', FieldInfo._fields + ('default',))
@@ -183,6 +185,10 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         return key_columns
 
     def get_indexes(self, cursor, table_name):
+        warnings.warn(
+            "get_indexes() is deprecated. Use get_constraints() instead.",
+            RemovedInDjango21Warning
+        )
         indexes = {}
         for info in self._table_info(cursor, table_name):
             if info['pk'] != 0:
@@ -214,7 +220,8 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         results = results[results.index('(') + 1:results.rindex(')')]
         for field_desc in results.split(','):
             field_desc = field_desc.strip()
-            m = re.search('"(.*)".*PRIMARY KEY( AUTOINCREMENT)?$', field_desc)
+            # Will be fixed in #27096
+            m = re.search('"(.*)".*PRIMARY KEY( AUTOINCREMENT)?', field_desc)
             if m:
                 return m.groups()[0]
         return None

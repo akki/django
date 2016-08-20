@@ -1,8 +1,10 @@
 import cx_Oracle
+import warnings
 
 from django.db.backends.base.introspection import (
     BaseDatabaseIntrospection, FieldInfo, TableInfo,
 )
+from django.utils.deprecation import RemovedInDjango21Warning
 from django.utils.encoding import force_text
 
 
@@ -117,6 +119,10 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
                 for row in cursor.fetchall()]
 
     def get_indexes(self, cursor, table_name):
+        warnings.warn(
+            "get_indexes() is deprecated. Use get_constraints() instead.",
+            RemovedInDjango21Warning
+        )
         sql = """
     SELECT LOWER(uic1.column_name) AS column_name,
            CASE user_constraints.constraint_type

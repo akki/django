@@ -14,3 +14,14 @@ class PostgreSQLTestCase(TestCase):
 
         connection_created.disconnect(register_hstore_handler)
         super(PostgreSQLTestCase, cls).tearDownClass()
+
+    def get_indexed_columns(self, table):
+        """
+        Get the single-column indexes on the table using a new cursor.
+        """
+        with connection.cursor() as cursor:
+            return [
+                c['columns'][0]
+                for c in connection.introspection.get_constraints(cursor, table).values()
+                if c['index'] and len(c['columns']) == 1
+            ]

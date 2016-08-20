@@ -33,23 +33,19 @@ class GinIndexTests(PostgreSQLTestCase):
 
 class SchemaTests(PostgreSQLTestCase):
 
-    def get_indexes(self, table):
-        """
-        Get the indexes on the table using a new cursor.
-        """
-        with connection.cursor() as cursor:
-            return connection.introspection.get_indexes(cursor, table)
-
     def test_gin_index(self):
         # Ensure the table is there and doesn't have an index.
-        self.assertNotIn('field', self.get_indexes(IntegerArrayModel._meta.db_table))
+        self.assertNotIn('field', self.get_indexed_columns(IntegerArrayModel._meta.db_table))
         # Add the index
         index = GinIndex(fields=['field'], name='integer_array_model_field_gin')
         with connection.schema_editor() as editor:
             editor.add_index(IntegerArrayModel, index)
-        self.assertIn('field', self.get_indexes(IntegerArrayModel._meta.db_table))
-        self.assertEqual(self.get_indexes(IntegerArrayModel._meta.db_table)['field']['type'], 'gin')
+        with connection.cursor() as cursor:
+            constraints = connection.introspection.get_constraints(cursor, IntegerArrayModel._meta.db_table)
+        self.assertIn('integer_array_model_field_gin', constraints)
+        self.assertEqual(constraints['integer_array_model_field_gin']['columns'], ['field'])
+        self.assertEqual(constraints['integer_array_model_field_gin']['type'], 'gin')
         # Drop the index
         with connection.schema_editor() as editor:
             editor.remove_index(IntegerArrayModel, index)
-        self.assertNotIn('field', self.get_indexes(IntegerArrayModel._meta.db_table))
+        self.assertNotIn('field', self.get_indexed_columns(IntegerArrayModel._meta.db_table))
