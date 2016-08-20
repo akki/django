@@ -6,7 +6,7 @@ from django.db import connection
 from django.db.utils import DatabaseError
 from django.test import TransactionTestCase, mock, skipUnlessDBFeature
 from django.test.utils import ignore_warnings
-from django.utils.deprection import RemovedInDjango21Warning
+from django.utils.deprecation import RemovedInDjango21Warning
 
 from .models import Article, ArticleReporter, City, Reporter
 

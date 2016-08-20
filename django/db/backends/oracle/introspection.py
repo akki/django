@@ -1,5 +1,6 @@
-import cx_Oracle
 import warnings
+
+import cx_Oracle
 
 from django.db.backends.base.introspection import (
     BaseDatabaseIntrospection, FieldInfo, TableInfo,
